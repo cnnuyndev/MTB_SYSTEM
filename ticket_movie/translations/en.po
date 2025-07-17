@@ -1,0 +1,32 @@
+msgid "Home"
+msgstr "Home"
+
+msgid "Language"
+msgstr "Language"
+
+msgid "Login"
+msgstr "Login"
+
+msgid "Logout"
+msgstr "Logout"
+
+msgid "Film"
+msgstr "Film"
+
+msgid "Hi"
+msgstr "Hi"
+
+msgid "Search..."
+msgstr "Search..."
+
+msgid "Cinema"
+msgstr "Cinema"
+
+msgid "English"
+msgstr "English"
+
+msgid "Vietnamese"
+msgstr "Vietnamese"
+
+msgid "Japanese"
+msgstr "Japanese"
