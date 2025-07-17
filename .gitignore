@@ -11,3 +11,5 @@ vscode/
 .env.development
 .env.test
 .env.production
+
+venv

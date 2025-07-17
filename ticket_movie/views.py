@@ -14,7 +14,7 @@ from .serializers import (
     SocialLoginSerializer
 )
 
-import requests
+import requests, os, polib
 from .models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -40,9 +40,14 @@ class LoginView(APIView):
             user = serializer.validated_data['user']
             refresh = RefreshToken.for_user(user)
             return Response({
-                'user': UserSerializer(user).data,
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
+                'error': "",
+                'message': "Đăng nhập thành công",
+                'statusCode': 201,
+                'data': {
+                    'user': UserSerializer(user).data,
+                    'refresh_token': str(refresh),
+                    'access_token': str(refresh.access_token),
+                }
             })
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

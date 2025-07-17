@@ -80,8 +80,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'MTBS',
-        'USER': 'postgres',
-        'PASSWORD': 'Openpgpwd123@',
+        'USER': 'tridm',
+        'PASSWORD': 'tridm',
         'HOST': 'localhost',
         'PORT': '5432',
     }

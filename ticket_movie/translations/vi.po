@@ -1,0 +1,32 @@
+msgid "Home"
+msgstr "Trang chủ"
+
+msgid "Language"
+msgstr "Ngôn ngữ"
+
+msgid "Login"
+msgstr "Đăng nhập"
+
+msgid "Logout"
+msgstr "Đăng xuất"
+
+msgid "Film"
+msgstr "Phim"
+
+msgid "Hi"
+msgstr "Chào"
+
+msgid "Search..."
+msgstr "Tìm kiếm..."
+
+msgid "Cinema"
+msgstr "Rạp"
+
+msgid "English"
+msgstr "Tiếng Anh"
+
+msgid "Vietnamese"
+msgstr "Tiếng Việt"
+
+msgid "Japanese"
+msgstr "Tiếng Nhật"
