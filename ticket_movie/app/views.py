@@ -1,12 +1,14 @@
 from datetime import datetime
+from decimal import Decimal
 from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 import os, polib
 from ticket_movie.app.serializers import CinemaSerializer, CitiesSerializer, MovieSerializer
-from ticket_movie.models import Cinema, City, Movie, Seat, Showtime
+from ticket_movie.models import Booking, BookingSeat, Cinema, City, Movie, Seat, Showtime, User
 from django.db.models import Max, Count
+from django.utils.crypto import get_random_string
 
 class TranslateView(APIView):
     def get(self, request):
@@ -164,3 +166,35 @@ class SeatsScreen(APIView):
             "max_number": max_number,
             "max_row": max_row,
         })
+        
+class SeatsScreenBooking(APIView):
+    def post(self, request):
+        data = request.data
+        user_id = data.get('user_id')
+        showtime_id = data.get('showtime_id')
+        total_amount = data.get('total_amount')
+        seats_id = data.get('seats_id')
+        
+        user = User.objects.get(id=user_id)
+        showtime = Showtime.objects.get(id=showtime_id)
+        booking = Booking.objects.create(
+            user=user,
+            showtime=showtime,
+            booking_code=get_random_string(10).upper(),  # hoặc bạn tự sinh code khác
+            total_amount=Decimal(total_amount),
+            status=Booking.BookingStatus.PENDING
+        )
+        
+        for id in seats_id:
+            seat_temp = Seat.objects.get(id = id)
+            price = showtime.base_price * 2 if seat_temp.type == "couple" else showtime.base_price
+            booking_seat = BookingSeat.objects.create(
+                booking=booking,
+                seat=seat_temp,
+                price = price,  # hoặc bạn tự sinh code khác
+            )
+            
+            seat_temp.is_active = False
+            seat_temp.save()
+            
+        return Response({"message": "OK"})
