@@ -4,12 +4,13 @@ from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAdminUser
 import os, polib
 from ticket_movie.app.serializers import CinemaSerializer, CitiesSerializer, MovieSerializer
 from ticket_movie.models import Booking, BookingSeat, Cinema, City, Movie, Seat, Showtime, User
 from django.db.models import Max, Count
 from django.utils.crypto import get_random_string
-
+from django.db import transaction
 class TranslateView(APIView):
     def get(self, request):
         try:
@@ -198,3 +199,28 @@ class SeatsScreenBooking(APIView):
             seat_temp.save()
             
         return Response({"message": "OK"})
+class CinemaCreateView(APIView):
+    permission_classes = [IsAdminUser]
+    @transaction.atomic
+    def post(self, request):
+        try:
+            serializer = CinemaSerializer(data=request.data, context={'request': request})
+            
+            if not serializer.is_valid():
+                return Response({
+                    'success': False,
+                    'errors': serializer.errors
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            serializer.save()
+            
+            return Response({
+                'success': True,
+                'data': serializer.data
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
