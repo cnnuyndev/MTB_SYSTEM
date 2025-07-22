@@ -60,3 +60,22 @@ class CinemaSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'city': {'read_only': True}, 
         }
+
+    def validate_phone(self, value):
+        if value and not value.isdigit():
+            raise serializers.ValidationError("Số điện thoại chỉ được chứa chữ số.")
+        return value
+
+    def validate(self, data):
+        if data.get('phone') and not data.get('opening_hours'):
+            raise serializers.ValidationError("Cần nhập giờ mở cửa nếu có số điện thoại.")
+        return data
+
+    def validate_opening_hours(value):
+        if " - " not in value:
+            raise serializers.ValidationError("Giờ mở cửa phải có định dạng 'HH:MM - HH:MM'.")
+
+    opening_hours = serializers.CharField(
+        required=False,
+        validators=[validate_opening_hours]
+    )
