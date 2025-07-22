@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ticket_movie.models import Movie
+from ticket_movie.models import Cinema, City, Movie
 from datetime import date
 
 class MovieSerializer(serializers.ModelSerializer):
@@ -33,3 +33,30 @@ class MovieSerializer(serializers.ModelSerializer):
         if value < date(1900, 1, 1):
             raise serializers.ValidationError("Ngày phát hành không hợp lệ.")
         return value
+    
+class CitiesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
+        fields = [
+            'id',
+            'name',
+            'country',
+        ]
+        extra_kwargs = {
+            'country': {'read_only': True}, 
+        }
+        
+class CinemaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cinema
+        fields = [
+            'id',
+            'name',
+            'address',
+            'phone',
+            'opening_hours',
+            'city'
+        ]
+        extra_kwargs = {
+            'city': {'read_only': True}, 
+        }
