@@ -54,39 +54,68 @@ class MoviesSchedule(APIView):
         day_str = request.data.get("day")
         if day_str:
             day = datetime.strptime(day_str, '%Y-%m-%d').date()
-            
-        start_datetime = datetime.combine(day, datetime.min.time())
-        end_datetime = datetime.combine(day, datetime.max.time())
+
+        start_datetime = timezone.make_aware(datetime.combine(day, datetime.min.time()))
+        end_datetime = timezone.make_aware(datetime.combine(day, datetime.max.time()))
 
         showtimes = Showtime.objects.select_related('movie', 'screen') \
             .filter(status='scheduled', screen__cinema_id=cinema_id
                     , start_time__gt=timezone.now()
                     , start_time__gte=start_datetime
                     , start_time__lte=end_datetime) \
-            .order_by('id')
+            .order_by('movie_id', 'screen_id', 'start_time')
 
-        data = []
+        movies = {}
         for st in showtimes:
-            data.append({
+            movie_id = str(st.movie.id)
+            if movie_id not in movies:
+                movies[movie_id] = {
+                    "movie": {
+                        "id": st.movie.id,
+                        "title": st.movie.title,
+                        "genre": st.movie.genre,
+                        "status": st.movie.status,
+                        "duration": st.movie.duration,
+                        "poster_url": st.movie.poster_url,
+                        "rating": st.movie.rating,
+                        "movie_cast": st.movie.movie_cast,
+                        "description": st.movie.description,
+                        "director": st.movie.director,
+                        "release_date": st.movie.release_date,
+                        "trailer_url": st.movie.trailer_url
+                    },
+                    "screens": {}
+                }
+            
+            screen_id = str(st.screen.id)
+            if screen_id not in movies[movie_id]["screens"]:
+                movies[movie_id]["screens"][screen_id] = {
+                    "screen_id": st.screen.id,
+                    "screen_name": st.screen.name,
+                    "screen_type": st.screen.type,
+                    "showtimes": []
+                }
+            
+            movies[movie_id]["screens"][screen_id]["showtimes"].append({
                 "showtime_id": st.id,
-                "movie_id": st.movie.id,
-                "movie_poster_url": st.movie.poster_url,
-                "movie_title": st.movie.title,
-                "movie_genre": st.movie.genre,
-                "duration": st.movie.duration,
                 "start_time": st.start_time,
                 "end_time": st.end_time,
-                "base_price": float(st.base_price),
-                "screen_id": st.screen.id,
-                "screen_name": st.screen.name,
-                "screen_type": st.screen.type,
+                "base_price": float(st.base_price)
             })
+        
+        result = []
+        for movie in movies.values():
+            movie["screens"] = list(movie["screens"].values())
+            result.append(movie)
 
-        return Response(data)
+        result.sort(key=lambda x: x["movie"]["release_date"])
+
+        return Response(result)
     
 class SeatsScreen(APIView):
     def post(self, request):
         screen_id = request.data.get("screen_id", 1)
+        showtime_id = request.data.get("showtime_id", 1)
         max_number = Seat.objects.filter(screen_id=screen_id).aggregate(Max('number'))['number__max']
         max_row = Seat.objects.filter(screen_id=screen_id).values('row').distinct().count()
 
@@ -114,12 +143,21 @@ class SeatsScreen(APIView):
                     CASE 
                         WHEN s.type = 'couple' THEN 1
                         ELSE 0
-                    END AS seat_index
+                    END AS seat_index,
+                    CASE 
+                        WHEN s.id IN (
+                            SELECT bs.seat_id 
+                            FROM public.booking_seats bs
+                            JOIN public.bookings b ON bs.booking_id = b.id
+                            WHERE b.showtime_id = %s
+                        ) THEN TRUE
+                        ELSE FALSE
+                    END AS is_booking
                 FROM public.seats s
                 WHERE s.screen_id = %s
             ) s
             ORDER BY s.row, s.number
-        """, [screen_id])
+        """, [showtime_id, screen_id])
 
         data = [
             {
@@ -131,6 +169,7 @@ class SeatsScreen(APIView):
                 "is_active": seat.is_active,
                 "seat_name": seat.seat_name,
                 "seat_name_couple": seat.seat_name_couple,
+                "is_booking": not seat.is_booking,
             }
             for seat in queryset
         ]
